@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Viewer</title>
+
+  <!-- Meta Information -->
+  <meta name="author" content="Indian Software Development Association, Tamil Nadu Branch" />
+  <meta name="description" content="Secure PDF viewer active from tomorrow to 15 Nov 2025. Made by Indian Software Development Association, Tamil Nadu Branch." />
+  <meta name="keywords" content="ISDA, PDF Viewer, Tamil Nadu, Indian Software Development Association" />
+
+  <style>
+    * { user-select: none; -webkit-user-drag: none; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f9f9f9;
+      font-family: Arial, sans-serif;
+      justify-content: center;
+      align-items: center;
+      color: #222;
+    }
+    header {
+      width: 100%;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+    button {
+      background: #0078d7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      margin-top: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 85vh;
+      display: none;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    footer {
+      text-align: center;
+      background: #111;
+      color: #fff;
+      padding: 10px;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      width: 100%;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+    }
+    .msg {
+      text-align: center;
+      font-size: 18px;
+      color: #444;
+    }
+  </style>
+</head>
+<body oncontextmenu="return false">
+
+  <header>Employability Skills PDF Viewer</header>
+
+  <iframe id="pdfFrame" src="https://raw.githubusercontent.com/appmakerharresh/notes/main/employability_skills.pdf#toolbar=0"></iframe>
+
+  <div id="message" class="msg"></div>
+
+  <button id="downloadBtn" style="display:none"
+    onclick="window.open('https://raw.githubusercontent.com/appmakerharresh/notes/main/employability_skills.pdf','_blank')">
+    Download PDF
+  </button>
+
+  <footer>
+    Made by <strong>Indian Software Development Association</strong>, Tamil Nadu Branch
+  </footer>
+
+  <script>
+    const now   = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() + 1);  // start from tomorrow
+    const end   = new Date('2025-11-15T23:59:59');
+
+    const pdfFrame = document.getElementById('pdfFrame');
+    const msg      = document.getElementById('message');
+    const btn      = document.getElementById('downloadBtn');
+
+    if (now >= start && now <= end) {
+      pdfFrame.style.display = 'block';
+      btn.style.display = 'inline-block';
+      msg.style.display = 'none';
+    } else {
+      pdfFrame.style.display = 'none';
+      btn.style.display = 'none';
+      msg.textContent = 'This PDF is only available from ' 
+                      + start.toDateString() 
+                      + ' to ' 
+                      + end.toDateString() + '.';
+    }
+  </script>
+</body>
+</html>
