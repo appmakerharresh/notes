@@ -1,117 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PDF Viewer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISDA Professional Serial Printer + WASM PDF</title>
 
-  <!-- Meta Information -->
-  <meta name="author" content="Indian Software Development Association, Tamil Nadu Branch" />
-  <meta name="description" content="Secure PDF viewer active from tomorrow to 15 Nov 2025. Made by Indian Software Development Association, Tamil Nadu Branch." />
-  <meta name="keywords" content="ISDA, PDF Viewer, Tamil Nadu, Indian Software Development Association" />
+<!-- WASM PDF library -->
+<script src="asposepdfjs.js"></script>
+<script src="asposepdfjs.wasm"></script>
 
-  <style>
-    * { user-select: none; -webkit-user-drag: none; }
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: #f9f9f9;
-      font-family: Arial, sans-serif;
-      justify-content: center;
-      align-items: center;
-      color: #222;
-    }
-    header {
-      width: 100%;
-      background: #111;
-      color: #fff;
-      text-align: center;
-      padding: 10px;
-      font-size: 16px;
-      letter-spacing: 0.5px;
-    }
-    button {
-      background: #0078d7;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      margin-top: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #005fa3;
-    }
-    iframe {
-      flex: 1;
-      border: none;
-      width: 100%;
-      height: 85vh;
-      display: none;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-    footer {
-      text-align: center;
-      background: #111;
-      color: #fff;
-      padding: 10px;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      width: 100%;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-    }
-    .msg {
-      text-align: center;
-      font-size: 18px;
-      color: #444;
-    }
-  </style>
+<style>
+:root {
+    --color-primary: #00796b;
+    --color-secondary: #28a745;
+    --color-background: #f0f4f8;
+    --color-card-bg: #fff;
+    --color-text-dark: #333;
+    --color-text-light: #f9f9f9;
+    --color-error: #dc3545;
+    --color-success: #28a745;
+    --shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-hover: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family: 'Segoe UI', sans-serif; padding:25px; background:var(--color-background); color:var(--color-text-dark); line-height:1.6; }
+h1 { text-align:center; color:var(--color-primary); margin-bottom:25px; border-bottom:3px solid var(--color-primary); padding-bottom:15px; font-size:2.2rem; letter-spacing:1.5px; }
+main { max-width:1000px; margin:0 auto; padding:20px; }
+
+#serial-status { text-align:center; padding:12px 20px; margin:0 auto 25px; max-width:800px; border-radius:8px; font-weight:700; font-size:1.1rem; box-shadow:var(--shadow-light); }
+.status-supported { background-color:#d4edda; color:var(--color-success); border:1px solid #c3e6cb; }
+.status-unsupported { background-color:#f8d7da; color:var(--color-error); border:1px solid #f5c6cb; animation:pulse-error 1.5s infinite; }
+@keyframes pulse-error {0%{transform:scale(1);opacity:1}50%{transform:scale(1.01);opacity:0.95}100%{transform:scale(1);opacity:1}}
+
+.controls-container { max-width:800px; margin:0 auto 35px; background:var(--color-card-bg); border-radius:16px; box-shadow:var(--shadow-light); padding:30px; border:1px solid #e0e0e0; }
+.serial-fieldset { border:2px solid var(--color-primary); padding:20px; border-radius:12px; margin-top:5px; }
+.serial-fieldset legend { font-size:1.25em; font-weight:700; color:var(--color-primary); padding:0 15px; background-color:var(--color-card-bg); margin-left:-5px; }
+
+.controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:20px; padding-top:15px; }
+.control-group { display:flex; flex-direction:column; padding:5px 0; }
+.controls label { font-weight:600; margin-bottom:7px; color:#555; font-size:0.95rem; }
+.controls select { padding:12px 10px; border-radius:8px; border:1px solid #ccc; background-color:#fcfcfc; appearance:none; cursor:pointer; background-repeat:no-repeat; background-position:right 10px center; transition:border-color 0.3s, box-shadow 0.3s; }
+.controls select:focus { border-color: var(--color-primary); outline:2px solid rgba(0,121,107,0.2); box-shadow:0 0 8px rgba(0,121,107,0.3); }
+
+#file-list { list-style:none; padding:0; max-width:800px; margin:0 auto 50px; }
+#file-list li { background:var(--color-card-bg); margin:12px 0; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center; border-left:6px solid var(--color-primary); transition: transform 0.2s, box-shadow 0.2s; font-size:1rem; }
+#file-list li:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+#file-list li span { flex-grow:1; word-break:break-word; margin-right:15px; font-weight:500; }
+
+button { padding:10px 22px; cursor:pointer; border:none; border-radius:6px; background-color:var(--color-secondary); color:var(--color-text-light); font-weight:600; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px; transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s; }
+button:hover { background-color:#1e8449; box-shadow:0 4px 10px rgba(40,167,69,0.4); transform:translateY(-1px);}
+button:active { transform:translateY(1px); }
+
+.progress-bar { width:100%; background:#eee; border-radius:6px; overflow:hidden; margin-top:10px; }
+.progress-bar-fill { height:12px; width:0%; background:var(--color-secondary); transition:width 0.2s; border-radius:6px; }
+
+@media(max-width:768px){.controls{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}h1{font-size:1.8rem}.controls-container,#file-list{padding:15px;margin-left:10px;margin-right:10px}}
+@media(max-width:480px){.controls{grid-template-columns:1fr}#file-list li{flex-direction:column;align-items:flex-start}#file-list li span{margin-bottom:10px;font-size:0.9rem}button{width:100%}}
+</style>
 </head>
-<body oncontextmenu="return false">
+<body>
+<main>
+<h1>🔌 ISDA Repository Serial Printer + WASM PDF</h1>
+<div id="serial-status" class="status-unsupported">Checking Web Serial API support...</div>
 
-  <header>Employability Skills PDF Viewer</header>
+<div class="controls-container">
+<fieldset class="serial-fieldset">
+<legend>Serial Configuration</legend>
+<div class="controls">
+<div class="control-group"><label for="baud-rate-select">Baud Rate:</label><select id="baud-rate-select"></select></div>
+<div class="control-group"><label for="data-bits-select">Data Bits:</label><select id="data-bits-select"></select></div>
+<div class="control-group"><label for="stop-bits-select">Stop Bits:</label><select id="stop-bits-select"></select></div>
+<div class="control-group"><label for="parity-select">Parity:</label><select id="parity-select"></select></div>
+<div class="control-group"><label for="flow-control-select">Flow Control:</label><select id="flow-control-select"></select></div>
+</div>
+</fieldset>
+</div>
 
-  <iframe id="pdfFrame" src="https://raw.githubusercontent.com/appmakerharresh/notes/main/employability_skills.pdf#toolbar=0"></iframe>
+<ul id="file-list"><li>Loading repository files...</li></ul>
+</main>
 
-  <div id="message" class="msg"></div>
+<script>
+const SERIAL_CONFIG = {
+    BAUD_RATES:[9600,19200,38400,57600,115200,230400],
+    DATA_BITS:[8,7],
+    STOP_BITS:[1,2],
+    PARITY:['none','even','odd'],
+    FLOW:['none','hardware'],
+    DEFAULT_BAUD:115200,
+    DEFAULT_DATA:8,
+    DEFAULT_STOP:1,
+    DEFAULT_PARITY:'none',
+    DEFAULT_FLOW:'none'
+};
 
-  <button id="downloadBtn" style="display:none"
-    onclick="window.open('https://raw.githubusercontent.com/appmakerharresh/notes/main/employability_skills.pdf','_blank')">
-    Download PDF
-  </button>
+const LICENSE_HEADER = "\n*** Prepared by ISDA | CC BY-ND (Config: %s) ***\n\n";
+const CHUNK_SIZE = 64*1024;
 
-  <footer>
-    Made by <strong>Indian Software Development Association</strong>, Tamil Nadu Branch
-  </footer>
+const REPO_OWNER = window.location.pathname.split('/')[1] || window.location.hostname.split('.')[0];
+const REPO_NAME = window.location.pathname.split('/')[2] || REPO_OWNER;
 
-  <script>
-    const now   = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() + 1);  // start from tomorrow
-    const end   = new Date('2025-11-15T23:59:59');
+function populateSelect(id, options, defaultVal){
+    const sel=document.getElementById(id);
+    options.forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(o===defaultVal) opt.selected=true; sel.appendChild(opt); });
+}
 
-    const pdfFrame = document.getElementById('pdfFrame');
-    const msg      = document.getElementById('message');
-    const btn      = document.getElementById('downloadBtn');
+function initSerialUI(){
+    populateSelect('baud-rate-select', SERIAL_CONFIG.BAUD_RATES, SERIAL_CONFIG.DEFAULT_BAUD);
+    populateSelect('data-bits-select', SERIAL_CONFIG.DATA_BITS, SERIAL_CONFIG.DEFAULT_DATA);
+    populateSelect('stop-bits-select', SERIAL_CONFIG.STOP_BITS, SERIAL_CONFIG.DEFAULT_STOP);
+    populateSelect('parity-select', SERIAL_CONFIG.PARITY, SERIAL_CONFIG.DEFAULT_PARITY);
+    populateSelect('flow-control-select', SERIAL_CONFIG.FLOW, SERIAL_CONFIG.DEFAULT_FLOW);
+}
 
-    if (now >= start && now <= end) {
-      pdfFrame.style.display = 'block';
-      btn.style.display = 'inline-block';
-      msg.style.display = 'none';
-    } else {
-      pdfFrame.style.display = 'none';
-      btn.style.display = 'none';
-      msg.textContent = 'This PDF is only available from ' 
-                      + start.toDateString() 
-                      + ' to ' 
-                      + end.toDateString() + '.';
+async function fetchFiles(path=''){
+    const url=`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+    const r=await fetch(url); if(!r.ok) throw new Error("GitHub API Error "+r.status);
+    const data=await r.json(); let files=[];
+    for(const i of data){ if(i.type==='dir') files=files.concat(await fetchFiles(i.path)); else if(i.type==='file') files.push(i);}
+    return files;
+}
+
+function createFileItem(file){
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${file.path}</span><div><button>Process</button><div class="progress-bar"><div class="progress-bar-fill"></div></div></div>`;
+    li.querySelector('button').addEventListener('click',()=>handleFile(file,li));
+    return li;
+}
+
+async function initApp(){
+    initSerialUI();
+    const fileList=document.getElementById('file-list');
+    const status=document.getElementById('serial-status');
+    if(!('serial' in navigator)){
+        status.textContent="❌ Web Serial API unsupported"; status.className="status-unsupported";
+        fileList.innerHTML=`<li>Serial printing unavailable</li>`; return;
     }
-  </script>
+    status.textContent="✅ Web Serial API supported"; status.className="status-supported";
+    fileList.innerHTML=`<li>Fetching files...</li>`;
+    try{
+        const files=await fetchFiles();
+        if(!files.length){ fileList.innerHTML=`<li>No files found</li>`; return;}
+        fileList.innerHTML=''; files.forEach(f=>fileList.appendChild(createFileItem(f)));
+    }catch(e){ fileList.innerHTML=`<li>Error fetching repo</li>`; console.error(e);}
+}
+
+function getSerialConfig(){ 
+    return { baudRate:+document.getElementById('baud-rate-select').value, dataBits:+document.getElementById('data-bits-select').value, stopBits:+document.getElementById('stop-bits-select').value, parity:document.getElementById('parity-select').value, flowControl:document.getElementById('flow-control-select').value };
+}
+
+async function downloadFile(url){ const r=await fetch(url); if(!r.ok) throw new Error("Download failed "+r.status); return await r.arrayBuffer(); }
+
+async function sendSerial(buffer,config,progressFill){
+    const port = await navigator.serial.requestPort();
+    await port.open(config);
+    const writer = port.writable.getWriter();
+    await writer.write(new TextEncoder().encode(LICENSE_HEADER.replace('%s',`${config.baudRate}/${config.dataBits}/${config.stopBits}/${config.parity}/${config.flowControl}`)));
+    for(let off=0; off<buffer.byteLength; off+=CHUNK_SIZE){
+        const chunk = new Uint8Array(buffer.slice(off,off+CHUNK_SIZE));
+        await writer.write(chunk);
+        if(progressFill) progressFill.style.width=Math.min(100,Math.round((off+chunk.byteLength)/buffer.byteLength*100))+'%';
+    }
+    writer.releaseLock(); await port.close();
+}
+
+async function handleFile(file,li){
+    alert("Prepared by Indian Software Development Association\nLicensed under CC BY-ND");
+    const ext=file.name.split('.').pop().toLowerCase();
+    const buffer=await downloadFile(file.download_url);
+    const progressFill=li.querySelector('.progress-bar-fill');
+
+    if(ext==='pdf' && navigator.userAgent.includes('Windows')){
+        // WASM PDF → XPS conversion
+        const Aspose = await AsposePDFModule(); // init WASM
+        const pdfDoc = await Aspose.loadPDF(buffer);
+        pdfDoc.pages.forEach(p=>p.addText("Prepared by ISDA | CC BY-ND",{x:50,y:50,size:12,color:'#FF0000',opacity:0.5}));
+        const xpsBytes = await pdfDoc.saveAsXPS();
+        const xpsBlob = new Blob([xpsBytes],{type:'application/vnd.ms-xpsdocument'});
+        const handle = await window.showSaveFilePicker({suggestedName:file.name.replace(/\.pdf$/i,'.xps'),types:[{description:'XPS Document',accept:{'application/vnd.ms-xpsdocument':['.xps']}}]});
+        const writable = await handle.createWritable(); await writable.write(xpsBlob); await writable.close();
+        alert('✅ PDF → XPS conversion done');
+        return;
+    }
+
+    await sendSerial(buffer,getSerialConfig(),progressFill);
+    alert(`✅ Sent ${file.name} via Serial`);
+}
+
+document.addEventListener('DOMContentLoaded',initApp);
+</script>
 </body>
 </html>
